@@ -1,0 +1,155 @@
+name: Build and Send Email Notification
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Show build start
+      - name: Build Start
+        run: |
+          echo "=================================="
+          echo "Starting Build Process"
+          echo "=================================="
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+          echo "=================================="
+
+      # Simulate build process
+      - name: Run Build
+        run: |
+          echo "Installing dependencies..."
+          sleep 2
+          echo "Dependencies installed"
+          echo ""
+          echo "Building project..."
+          sleep 2
+          echo "Build successful"
+          echo ""
+          echo "Running tests..."
+          sleep 2
+          echo "All tests passed"
+          echo ""
+          echo "Build completed successfully!"
+
+      # Send success email
+      - name: Send Success Email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: Build #${{ github.run_number }} Completed Successfully
+          to: ${{ secrets.EMAIL_TO }}
+          from: GitHub Actions <${{ secrets.EMAIL_USERNAME }}>
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+                .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: 0 auto; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 5px; }
+                .status { background: #28a745; color: white; padding: 10px 20px; border-radius: 5px; display: inline-block; margin: 20px 0; }
+                .details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; color: #666; margin-top: 30px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🎉 Build Completed Successfully!</h1>
+                </div>
+                
+                <div class="status">SUCCESS</div>
+                
+                <div class="details">
+                  <h3>Build Details:</h3>
+                  <p><strong>Repository:</strong> ${{ github.repository }}</p>
+                  <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+                  <p><strong>Build Number:</strong> #${{ github.run_number }}</p>
+                  <p><strong>Commit:</strong> ${{ github.sha }}</p>
+                  <p><strong>Commit Message:</strong> ${{ github.event.head_commit.message }}</p>
+                  <p><strong>Author:</strong> ${{ github.actor }}</p>
+                  <p><strong>Timestamp:</strong> ${{ github.event.head_commit.timestamp }}</p>
+                </div>
+                
+                <p>
+                  <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" 
+                    style="background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                    View Workflow Run
+                  </a>
+                </p>
+                
+                <div class="footer">
+                  <p>Automated by GitHub Actions</p>
+                </div>
+              </div>
+            </body>
+            </html>
+
+      # Send failure email
+      - name: Send Failure Email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: Build #${{ github.run_number }} Failed
+          to: ${{ secrets.EMAIL_TO }}
+          from: GitHub Actions <${{ secrets.EMAIL_USERNAME }}>
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+                .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: 0 auto; }
+                .header { background: #dc3545; color: white; padding: 20px; border-radius: 5px; }
+                .status { background: #dc3545; color: white; padding: 10px 20px; border-radius: 5px; display: inline-block; margin: 20px 0; }
+                .details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>Build Failed</h1>
+                </div>
+                
+                <div class="status">FAILED</div>
+                
+                <div class="details">
+                  <h3>Build Details:</h3>
+                  <p><strong>Repository:</strong> ${{ github.repository }}</p>
+                  <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+                  <p><strong>Build Number:</strong> #${{ github.run_number }}</p>
+                  <p><strong>Author:</strong> ${{ github.actor }}</p>
+                </div>
+                
+                <p>
+                  <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" 
+                    style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                    View Error Details
+                  </a>
+                </p>
+              </div>
+            </body>
+            </html>
